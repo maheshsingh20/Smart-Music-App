@@ -4,6 +4,7 @@ build/
 .env
 .env.local
 .env.production
+.env.development
 *.log
 .DS_Store
 coverage/
@@ -12,3 +13,7 @@ coverage/
 *.swp
 *.swo
 .cache/
+
+# Docker
+mongodb-backup-*/
+docker-compose.override.yml

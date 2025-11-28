@@ -289,7 +289,39 @@ Select from 8 different moods to get perfectly matched music:
 - SQL injection prevention
 - XSS protection
 
-## 🚀 Deployment
+## � Docker Dneployment (Recommended)
+
+### Quick Start with Docker
+```bash
+# 1. Copy environment file
+cp .env.docker .env
+
+# 2. Edit .env and add your API credentials
+nano .env
+
+# 3. Build and start containers
+docker-compose up -d
+
+# 4. Access the app
+# Frontend: http://localhost:3000
+# Backend: http://localhost:5000
+```
+
+**See [DOCKER.md](DOCKER.md) for detailed Docker documentation.**
+
+### Docker Commands
+```bash
+# View logs
+docker-compose logs -f
+
+# Stop containers
+docker-compose down
+
+# Rebuild
+docker-compose up -d --build
+```
+
+## 🚀 Traditional Deployment
 
 ### Backend Deployment (Heroku/Railway/Render)
 1. Set environment variables

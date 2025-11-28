@@ -1,0 +1,167 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                String      @id @default(auto()) @map("_id") @db.ObjectId
+  email             String      @unique
+  password          String
+  displayName       String
+  avatar            String?
+  role              Role        @default(USER)
+  subscriptionTier  Tier        @default(FREE)
+  subscriptionId    String?
+  subscriptionEnd   DateTime?
+  refreshToken      String?
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  
+  playlists         Playlist[]
+  likedSongs        LikedSong[]
+  following         Follow[]    @relation("Follower")
+  followers         Follow[]    @relation("Following")
+  activities        Activity[]
+  downloads         Download[]
+}
+
+model Artist {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  bio         String?
+  image       String?
+  genres      String[]
+  verified    Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  
+  songs       Song[]
+  albums      Album[]
+  followers   Follow[]
+}
+
+model Album {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  cover       String?
+  releaseYear Int
+  artistId    String   @db.ObjectId
+  artist      Artist   @relation(fields: [artistId], references: [id])
+  createdAt   DateTime @default(now())
+  
+  songs       Song[]
+}
+
+model Song {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  duration    Int
+  audioUrl    String
+  cover       String?
+  genre       String
+  mood        String?
+  playCount   Int      @default(0)
+  artistId    String   @db.ObjectId
+  albumId     String?  @db.ObjectId
+  artist      Artist   @relation(fields: [artistId], references: [id])
+  album       Album?   @relation(fields: [albumId], references: [id])
+  createdAt   DateTime @default(now())
+  
+  playlistSongs PlaylistSong[]
+  likedBy       LikedSong[]
+  downloads     Download[]
+}
+
+model Playlist {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  cover       String?
+  isPublic    Boolean  @default(true)
+  userId      String   @db.ObjectId
+  user        User     @relation(fields: [userId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  
+  songs       PlaylistSong[]
+}
+
+model PlaylistSong {
+  id         String   @id @default(auto()) @map("_id") @db.ObjectId
+  playlistId String   @db.ObjectId
+  songId     String   @db.ObjectId
+  position   Int
+  playlist   Playlist @relation(fields: [playlistId], references: [id])
+  song       Song     @relation(fields: [songId], references: [id])
+  addedAt    DateTime @default(now())
+  
+  @@unique([playlistId, songId])
+}
+
+model LikedSong {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String   @db.ObjectId
+  songId    String   @db.ObjectId
+  user      User     @relation(fields: [userId], references: [id])
+  song      Song     @relation(fields: [songId], references: [id])
+  likedAt   DateTime @default(now())
+  
+  @@unique([userId, songId])
+}
+
+model Follow {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  followerId  String   @db.ObjectId
+  followingId String?  @db.ObjectId
+  artistId    String?  @db.ObjectId
+  follower    User     @relation("Follower", fields: [followerId], references: [id])
+  following   User?    @relation("Following", fields: [followingId], references: [id])
+  artist      Artist?  @relation(fields: [artistId], references: [id])
+  followedAt  DateTime @default(now())
+  
+  @@unique([followerId, followingId])
+  @@unique([followerId, artistId])
+}
+
+model Activity {
+  id        String       @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String       @db.ObjectId
+  type      ActivityType
+  metadata  Json
+  user      User         @relation(fields: [userId], references: [id])
+  createdAt DateTime     @default(now())
+}
+
+model Download {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String   @db.ObjectId
+  songId      String   @db.ObjectId
+  token       String   @unique
+  expiresAt   DateTime
+  user        User     @relation(fields: [userId], references: [id])
+  song        Song     @relation(fields: [songId], references: [id])
+  downloadedAt DateTime @default(now())
+  
+  @@unique([userId, songId])
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Tier {
+  FREE
+  PREMIUM
+}
+
+enum ActivityType {
+  PLAYED_SONG
+  LIKED_SONG
+  CREATED_PLAYLIST
+  FOLLOWED_ARTIST
+  FOLLOWED_USER
+}
